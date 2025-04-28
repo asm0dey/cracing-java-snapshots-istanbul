@@ -7,11 +7,11 @@ theme:
 
 # `whoami`?
 
-- Geek 
+- Geek
 <!-- pause -->
 - Developer 🥑 at Bellsoft (we'll talk about it later)
 <!-- pause -->
-- JVM developer: Java and Kotlin (and actually Clojure, Scala, Ceylon 😱) 
+- JVM developer: Java and Kotlin (and actually Clojure, Scala, Ceylon 😱)
 <!-- pause -->
 - DevOps is not a person, but I could be!
 <!-- pause -->
@@ -39,12 +39,12 @@ https://bell-sw.com
 
 <!-- pause -->
 
-Because Java is slow ;) 
+Because Java is slow ;)
 
 <!-- pause -->
 
-Just kidding. 
-<!-- pause --> 
+Just kidding.
+<!-- pause -->
 But applications actually are!
 
 <!-- pause -->
@@ -118,7 +118,7 @@ Restore it: `criu --shell-job restore`
 
 ## But
 
-It doesn't _always_ work 
+It doesn't _always_ work
 <!-- pause -->
 
 This is how it fails:
@@ -181,7 +181,7 @@ Not even all builds support CRaC (it makes the distribution larger)
 public static void main(String args[]) throws InterruptedException {
   // This is a part of the saved state
   long startTime = System.currentTimeMillis();
-  for(int counter: IntStream.range(1, 100).toArray()) {
+  for(int counter: IntStream.range(1, 10000).toArray()) {
     Thread.sleep(1000);
     long currentTime = System.currentTimeMillis();
     System.out.println("Counter: " + counter + "(passed " + (currentTime-startTime) + " ms)");
@@ -218,7 +218,7 @@ docker run --cap-add CAP_SYS_PTRACE --cap-add CAP_CHECKPOINT_RESTORE -d pre_crac
 <!-- pause -->
 
 - `CAP_SYS_PTRACE`: we need to access the whole process tree
-  - transfer data to or from the memory of arbitrary processes using process_vm_readv(2) and process_vm_writev(2) 
+  - transfer data to or from the memory of arbitrary processes using process_vm_readv(2) and process_vm_writev(2)
 <!-- pause-->
 - `CAP_CHECKPOINT_RESTORE`: somehow there is a special cap for this
   - Update /proc/sys/kernel/ns_last_pid; Read the contents of the symbolic links in /proc/pid/map_files for other processes
@@ -231,11 +231,12 @@ docker run --cap-add CAP_SYS_PTRACE --cap-add CAP_CHECKPOINT_RESTORE -d pre_crac
 
 # Now let's crack it and launch from snapshot!
 
-```shell +exec +acquire_terminal
+```shell +exec
 ID=$(docker run --cap-add CAP_SYS_PTRACE --cap-add CAP_CHECKPOINT_RESTORE -d pre_crack)
 sleep 5
 docker exec -it $ID jcmd 129 JDK.checkpoint
 docker commit $ID post_crack
+echo Checkpointed!
 sleep 5
 ```
 
@@ -248,7 +249,6 @@ dive post_crack
 ```
 
 <!-- pause -->
-
 And run it!
 
 ```shell +exec
