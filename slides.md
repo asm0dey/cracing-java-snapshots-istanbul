@@ -254,3 +254,69 @@ And run it!
 ```shell +exec
 docker run --rm --entrypoint java post_crack -XX:CRaCRestoreFrom=/app/checkpoint
 ```
+
+<!-- end_slide -->
+
+# CRaCing Spring
+
+Spring Boot supports CRaC out of the box!
+
+(version 3.2+)
+
+<!-- pause -->
+
+Demo!
+<!-- end_slide -->
+
+```shell +exec +acquire_terminal
+PET=/home/finkel/work_self/spring-petclinic
+pushd $PET
+./gradlew build -xtest
+popd
+cp $PET/build/libs/spring-petclinic-3.4.0.jar crac-spring
+```
+<!-- pause -->
+
+```bash +exec +acquire_terminal
+docker build -t pre_crack -f crac-spring/Dockerfile crac-spring
+sleep 3
+```
+
+<!--pause -->
+You know the drill...
+
+<!-- end_slide -->
+
+# Is everything that easy?
+
+<!-- pause -->
+
+You guessed id!
+<!-- pause -->
+Let's break it!
+
+<!-- end_slide -->
+
+# Now you know the basics!
+
+1. CRaC allows to startup any software almost instantly
+2. Building Docker with CRaC is not simple but doable
+   1. Build jar
+   2. Build docker with this jar startup in entrypoint
+   3. Run image with `--privileged` or with `--cap-add`
+   4. Checkpoint it
+   5. Commit
+3. To support custom things in application we should
+   1. Implement `Resource`
+   2. Register it in `Core`
+
+<!-- end_slide -->
+
+# Thank you! Questions?
+
+- Site    : https://asm0dey.site
+- Bluesky : @asm0dey.site
+- Twitter : @asm0di0
+- Mastodon: @asm0dey@fosstodon.org
+- LinkedIn: @asm0dey
+- E-mail  : me@asm0dey.site
