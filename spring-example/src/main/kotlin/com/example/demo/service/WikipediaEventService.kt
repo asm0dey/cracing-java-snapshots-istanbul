@@ -2,6 +2,9 @@ package com.example.demo.service
 
 import com.example.demo.model.WikipediaEvent
 import jakarta.annotation.PostConstruct
+import org.crac.Context
+import org.crac.Core
+import org.crac.Resource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -10,9 +13,34 @@ import reactor.core.scheduler.Schedulers
 import java.time.LocalDateTime
 
 @Service
-class WikipediaEventService {
+class WikipediaEventService : Resource {
     private val logger = LoggerFactory.getLogger(WikipediaEventService::class.java)
     private val webClient = WebClient.builder().build()
+    private var subscription: reactor.core.Disposable? = null
+    private var isConnected = false
+    private val wikipediaUrl = "https://stream.wikimedia.org/v2/stream/recentchange"
+
+    init {
+        // Register with CRaC
+        Core.getGlobalContext().register(this)
+        logger.info("Registered WikipediaEventService with CRaC")
+    }
+
+    override fun beforeCheckpoint(context: Context<out Resource>) {
+        logger.info("CRaC beforeCheckpoint: Stopping Wikipedia event stream connection")
+        disconnectFromWikipediaStream()
+    }
+
+    override fun afterRestore(context: Context<out Resource>) {
+        logger.info("CRaC afterRestore: Restoring Wikipedia event stream connection")
+        connectToWikipediaStream()
+    }
+
+    private fun disconnectFromWikipediaStream() {
+        subscription?.dispose()
+        isConnected = false
+        logger.info("Disconnected from Wikipedia event stream")
+    }
 
     // Current event that gets updated with each SSE message
     private var currentEvent: WikipediaEvent = WikipediaEvent(
@@ -24,9 +52,15 @@ class WikipediaEventService {
 
     @PostConstruct
     fun connectToWikipediaStream() {
-        val wikipediaUrl = "https://stream.wikimedia.org/v2/stream/recentchange"
+        // If already connected, don't connect again
+        if (isConnected) {
+            logger.info("Already connected to Wikipedia event stream")
+            return
+        }
 
-        webClient.get()
+        logger.info("Connecting to Wikipedia event stream")
+
+        subscription = webClient.get()
             .uri(wikipediaUrl)
             .retrieve()
             .bodyToFlux(String::class.java)
@@ -54,6 +88,15 @@ class WikipediaEventService {
                         logger.error("Error processing event: {}", e.message, e)
                     }
                 }
+            }
+            .doOnSubscribe { isConnected = true }
+            .doOnError { error -> 
+                logger.error("Error in Wikipedia event stream: {}", error.message, error)
+                isConnected = false
+            }
+            .doOnCancel { 
+                logger.info("Wikipedia event stream cancelled")
+                isConnected = false
             }
             .subscribe()
     }
