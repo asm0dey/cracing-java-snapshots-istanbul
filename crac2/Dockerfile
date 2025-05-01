@@ -4,4 +4,4 @@ RUN wget https://download.bell-sw.com/java/21.0.7+11/bellsoft-jdk21.0.7+11-linux
 ADD Example.java /app/Example.java
 WORKDIR /app
 RUN javac Example.java
-ENTRYPOINT java -XX:CRaCCheckpointTo=/app/checkpoint Example
+ENTRYPOINT ["java", "-XX:CRaCCheckpointTo=/app/checkpoint", "Example"]
